@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Webseite für Kundenstamm" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <title>Kundenstamm</title>
+  <style>
+    /* Kopfzeile */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #007bff;
+      padding: 10px 20px;
+    }
+    /* Stil für die Buttons in der Kopfzeile */
+    .header-button {
+      color: #007bff;
+      background-color: white;
+      border: 1px solid #007bff;
+      border-radius: 5px;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    /* Container für Kunden und Angebote */
+    .kundenstamm-container,
+    .angebote-container {
+      margin: 20px;
+      display: none; /* Standardmäßig ausgeblendet */
+    }
+    /* Formularstil */
+    form {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    /* Tabelle zur Anzeige der Kunden */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+<noscript>Sie müssen JavaScript aktivieren, um diese App auszuführen.</noscript>
+
+<!-- React Root Element -->
+<div id="root">
+  <!-- Kopfzeile -->
+  <header>
+    <div class="header-left">
+      <button class="header-button" onclick="goToDashboard()">Dashboard</button>
+    </div>
+    <div class="header-right">
+      <button class="header-button" onclick="viewAngebote()">Angebote</button>
+      <button class="header-button" onclick="viewKundenstamm()">Kundenstamm</button>
+      <button class="header-button" onclick="switchRole()">Rollenwechsel</button>
+    </div>
+  </header>
+
+  <!-- Kundenstamm Container -->
+  <div class="kundenstamm-container" id="kundenstamm-container">
+    <!-- Formular zum Hinzufügen eines neuen Kunden -->
+    <form id="kundenForm">
+      <h2>Neuen Kunden hinzufügen</h2>
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="text" id="adresse" placeholder="Adresse" required />
+      <input type="email" id="email" placeholder="E-Mail" required />
+      <input type="text" id="telefon" placeholder="Telefonnummer" required />
+      <input type="text" id="firma" placeholder="Firma" required />
+      <button type="submit">Kunden hinzufügen</button>
+    </form>
+
+    <!-- Kunden anzeigen -->
+    <h2>Alle Kunden anzeigen</h2>
+    <button onclick="loadKunden()">Kunden anzeigen</button>
+    <table id="kundenTable">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Adresse</th>
+        <th>E-Mail</th>
+        <th>Telefon</th>
+        <th>Firma</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!-- Dynamische Kundenliste wird hier eingefügt -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Angebote Container -->
+  <div class="angebote-container" id="angebote-container">
+    <!-- Formular zum Hinzufügen eines neuen Angebots -->
+    <form id="angebotForm">
+      <h2>Neues Angebot erstellen</h2>
+      <label for="angebot_kunde_id">Kunde auswählen:</label>
+      <select id="angebot_kunde_id" name="angebot_kunde_id" required>
+        <option value="">-- Kunde auswählen --</option>
+        <!-- Optionen werden dynamisch geladen -->
+      </select>
+
+      <label for="angebot_name">Name:</label>
+      <input type="text" id="angebot_name" name="angebot_name" required />
+
+      <label for="angebot_beschreibung">Beschreibung:</label>
+      <textarea id="angebot_beschreibung" name="angebot_beschreibung"></textarea>
+
+      <label for="angebot_preis">Preis:</label>
+      <input type="number" step="0.01" id="angebot_preis" name="angebot_preis" required />
+
+      <label for="angebot_waehrung">Währung:</label>
+      <input type="text" id="angebot_waehrung" name="angebot_waehrung" required />
+
+      <label for="angebot_status">Status:</label>
+      <input type="text" id="angebot_status" name="angebot_status" placeholder="z.B. offen" />
+
+      <button type="submit">Angebot erstellen</button>
+    </form>
+    <!-- Anzeige der Angebotsantwort -->
+    <div id="angebotResponseMessage"></div>
+  </div>
+</div>
+
+<script>
+  // Navigation-Funktionen
+  function goToDashboard() {
+    window.location.href = '/dashboard';
+  }
+  function viewAngebote() {
+    document.getElementById('angebote-container').style.display = 'block';
+    document.getElementById('kundenstamm-container').style.display = 'none';
+    loadKundenDropdown();
+  }
+  function viewKundenstamm() {
+    document.getElementById('kundenstamm-container').style.display = 'block';
+    document.getElementById('angebote-container').style.display = 'none';
+  }
+  function switchRole() {
+    window.location.href = '/switch-role';
+  }
+
+  // Funktion zum Laden der Kundenliste in das Dropdown für Angebote
+  function loadKundenDropdown() {
+    fetch('http://localhost:3000/api/kunden')
+            .then(response => response.json())
+            .then(data => {
+              const dropdown = document.getElementById('angebot_kunde_id');
+              dropdown.innerHTML = '<option value="">-- Kunde auswählen --</option>';
+              data.forEach(kunde => {
+                const option = document.createElement('option');
+                option.value = kunde.kunde_id; // Hier wird die Kunden-ID als value gespeichert
+                option.text = kunde.name;
+                dropdown.appendChild(option);
+              });
+            })
+            .catch(error => console.error('Fehler beim Laden der Kunden:', error));
+  }
+
+  // Formularverarbeitung: Neuer Kunde
+  document.getElementById('kundenForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const adresse = document.getElementById('adresse').value;
+    const email = document.getElementById('email').value;
+    const telefon = document.getElementById('telefon').value;
+    const firma = document.getElementById('firma').value;
+
+    fetch('http://localhost:3000/api/kunden', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, adresse, email, telefon, firma })
+    })
+            .then(response => response.json())
+            .then(data => {
+              alert(data.message);
+              document.getElementById('kundenForm').reset();
+              loadKundenDropdown(); // Aktuelle Kundenliste neu laden
+            })
+            .catch(error => {
+              console.error('Fehler beim Hinzufügen des Kunden:', error);
+              alert('Ein Fehler ist beim Hinzufügen des Kunden aufgetreten.');
+            });
+  });
+
+  // Formularverarbeitung: Neues Angebot
+  document.getElementById('angebotForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const kunde_id = document.getElementById('angebot_kunde_id').value;
+    const name = document.getElementById('angebot_name').value;
+    const beschreibung = document.getElementById('angebot_beschreibung').value;
+    const preis = parseFloat(document.getElementById('angebot_preis').value);
+    const waehrung = document.getElementById('angebot_waehrung').value;
+    const status = document.getElementById('angebot_status').value;
+
+    console.log("Gesendete Daten:", { kunde_id, name, beschreibung, Preis: preis, waehrung, status });
+
+    fetch('http://localhost:3000/api/angebote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kunde_id, name, beschreibung, Preis: preis, waehrung, status })
+    })
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('angebotResponseMessage').innerText = data.message;
+              document.getElementById('angebotForm').reset();
+            })
+            .catch(error => {
+              console.error('Fehler beim Erstellen des Angebots:', error);
+              document.getElementById('angebotResponseMessage').innerText = 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
+            });
+  });
+
+  // Kundenliste laden (z. B. für die Anzeige in der Tabelle)
+  function loadKunden() {
+    fetch('http://localhost:3000/api/kunden')
+            .then(response => response.json())
+            .then(data => {
+              const tableBody = document.querySelector('#kundenTable tbody');
+              tableBody.innerHTML = '';
+              data.forEach(kunde => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>${kunde.name}</td>
+            <td>${kunde.adresse}</td>
+            <td>${kunde.email}</td>
+            <td>${kunde.telefon}</td>
+            <td>${kunde.firma}</td>
+          `;
+                tableBody.appendChild(row);
+              });
+            })
+            .catch(error => {
+              console.error('Fehler beim Laden der Kunden:', error);
+              alert('Ein Fehler ist beim Laden der Kunden aufgetreten.');
+            });
+  }
+
+  // Lade das Kunden-Dropdown beim Seitenstart
+  document.addEventListener("DOMContentLoaded", loadKundenDropdown);
+</script>
+
+</body>
+</html>
