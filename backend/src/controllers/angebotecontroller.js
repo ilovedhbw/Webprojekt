@@ -63,7 +63,7 @@ exports.addAngebot = (req, res) => {
         INSERT INTO Angebot
         (kunde_id, name, beschreibung, Preis, waehrung, status, erstellt_am, aktualisiert_am)
         VALUES
-            (?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), datetime('now, 'localtime))
+            (?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), datetime('now','localtime'))
     `;
 
     db.run(sql, [kunde_id, name, beschreibung, Preis, waehrung, status], function (err) {
