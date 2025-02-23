@@ -8,7 +8,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Datenbankfehler:', err.message);
     } else {
-        console.log('Mit der SQLite-Datenbank (Angebot) verbunden.');
+        console.log('Mit der SQLite-Datenbank verbunden.');
     }
 });
 
@@ -22,7 +22,6 @@ exports.getAlleAngebote = (req, res) => {
                 error: err.message
             });
         }
-        // rows enthält alle Angebote
         return res.json(rows);
     });
 };
@@ -31,7 +30,6 @@ exports.getAlleAngebote = (req, res) => {
 exports.getAngebotNachId = (req, res) => {
     const angebotId = req.params.id;
     const sql = 'SELECT * FROM Angebot WHERE angebot_id = ?';
-
     db.get(sql, [angebotId], (err, row) => {
         if (err) {
             return res.status(500).json({
@@ -50,30 +48,31 @@ exports.getAngebotNachId = (req, res) => {
 
 // POST: Ein neues Angebot hinzufügen
 exports.addAngebot = (req, res) => {
-    const { kunde_id, name, beschreibung, Preis, waehrung, status } = req.body;
+    // Beachte: Hier wird jetzt "preis" (klein) verwendet
+    const { kunde_id, name, beschreibung, preis, waehrung, status } = req.body;
 
     // Minimal-Validierung
-    if (!kunde_id || !name || !Preis || !waehrung) {
+    if (!kunde_id || !name || !preis || !waehrung) {
         return res.status(400).json({
-            message: 'Bitte fülle mindestens kunde_id, name, Preis und waehrung aus'
+            message: 'Bitte fülle mindestens kunde_id, name, preis und waehrung aus'
         });
     }
 
+    const statusValue = status || 'neu';
     const sql = `
         INSERT INTO Angebot
-        (kunde_id, name, beschreibung, Preis, waehrung, status, erstellt_am, aktualisiert_am)
+        (kunde_id, name, beschreibung, preis, waehrung, status, erstellt_am, aktualisiert_am)
         VALUES
             (?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), datetime('now','localtime'))
     `;
 
-    db.run(sql, [kunde_id, name, beschreibung, Preis, waehrung, status], function (err) {
+    db.run(sql, [kunde_id, name, beschreibung, preis, waehrung, statusValue], function (err) {
         if (err) {
             return res.status(500).json({
                 message: 'Fehler beim Hinzufügen des Angebots',
                 error: err.message
             });
         }
-        // this.lastID = ID des neu angelegten Datensatzes
         return res.status(201).json({
             message: 'Angebot erfolgreich hinzugefügt',
             angebot_id: this.lastID
@@ -84,29 +83,29 @@ exports.addAngebot = (req, res) => {
 // PUT: Ein bestehendes Angebot aktualisieren
 exports.updateAngebot = (req, res) => {
     const angebotId = req.params.id;
-    const { kunde_id, name, beschreibung, Preis, waehrung, status } = req.body;
+    const { kunde_id, name, beschreibung, preis, waehrung, status } = req.body;
 
-    // Minimal-Validierung
-    if (!kunde_id || !name || !Preis || !waehrung) {
+    if (!kunde_id || !name || !preis || !waehrung) {
         return res.status(400).json({
-            message: 'Bitte fülle mindestens kunde_id, name, Preis und waehrung aus'
+            message: 'Bitte fülle mindestens kunde_id, name, preis und waehrung aus'
         });
     }
 
+    const statusValue = status || 'neu';
     const sql = `
         UPDATE Angebot
         SET
             kunde_id = ?,
             name = ?,
             beschreibung = ?,
-            Preis = ?,
+            preis = ?,
             waehrung = ?,
             status = ?,
             aktualisiert_am = datetime('now', 'localtime')
         WHERE angebot_id = ?
     `;
 
-    db.run(sql, [kunde_id, name, beschreibung, Preis, waehrung, status, angebotId], function (err) {
+    db.run(sql, [kunde_id, name, beschreibung, preis, waehrung, statusValue, angebotId], function (err) {
         if (err) {
             return res.status(500).json({
                 message: 'Fehler beim Aktualisieren des Angebots',

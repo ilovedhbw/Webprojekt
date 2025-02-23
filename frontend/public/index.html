@@ -47,6 +47,11 @@
       padding: 10px;
       text-align: left;
     }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
     button {
       padding: 10px 20px;
       font-size: 18px;
@@ -83,20 +88,18 @@
       <th>E-Mail</th>
       <th>Telefon</th>
       <th>Firma</th>
-      <th>Aktionen</th>
     </tr>
     </thead>
     <tbody></tbody>
   </table>
 
+  <h2>Neuen Kunden hinzufügen</h2>
   <form id="kundenForm">
-    <h2>Kunden hinzufügen / bearbeiten</h2>
-    <input type="hidden" id="kunde_id">
-    <input type="text" id="name" placeholder="Name" required />
-    <input type="text" id="adresse" placeholder="Adresse" required />
-    <input type="email" id="email" placeholder="E-Mail" required />
-    <input type="text" id="telefon" placeholder="Telefonnummer" required />
-    <input type="text" id="firma" placeholder="Firma" required />
+    <input type="text" id="kunden_name" placeholder="Name" required />
+    <input type="text" id="kunden_adresse" placeholder="Adresse" required />
+    <input type="email" id="kunden_email" placeholder="E-Mail" required />
+    <input type="text" id="kunden_telefon" placeholder="Telefon" required />
+    <input type="text" id="kunden_firma" placeholder="Firma" />
     <button type="submit">Speichern</button>
   </form>
 </div>
@@ -108,6 +111,7 @@
   <table id="angeboteTable">
     <thead>
     <tr>
+      <th>Kunde</th>
       <th>Name</th>
       <th>Beschreibung</th>
       <th>Preis</th>
@@ -118,17 +122,16 @@
     <tbody></tbody>
   </table>
 
+  <h2>Neues Angebot erstellen / bearbeiten</h2>
   <form id="angebotForm">
-    <h2>Neues Angebot erstellen</h2>
+    <input type="hidden" id="angebot_id">
     <label for="angebot_kunde_id">Kunde auswählen:</label>
-    <select id="angebot_kunde_id" required>
-      <option value="">-- Kunde auswählen --</option>
-    </select>
+    <select id="angebot_kunde_id" required></select>
     <input type="text" id="angebot_name" placeholder="Name" required />
     <textarea id="angebot_beschreibung" placeholder="Beschreibung"></textarea>
     <input type="number" step="0.01" id="angebot_preis" placeholder="Preis" required />
     <input type="text" id="angebot_waehrung" placeholder="Währung" required />
-    <button type="submit">Angebot erstellen</button>
+    <button type="submit">Speichern</button>
   </form>
 </div>
 
@@ -136,7 +139,6 @@
   function showPage(pageId) {
     document.querySelectorAll('.page-content').forEach(page => page.style.display = 'none');
     document.getElementById(pageId).style.display = 'block';
-
     if (pageId === 'angebote') {
       loadKundenDropdown();
       loadAngebote();
@@ -150,41 +152,16 @@
               const tableBody = document.querySelector('#kundenTable tbody');
               tableBody.innerHTML = '';
               data.forEach(kunde => {
-                tableBody.innerHTML += `
-            <tr>
-              <td>${kunde.name}</td>
-              <td>${kunde.adresse}</td>
-              <td>${kunde.email}</td>
-              <td>${kunde.telefon}</td>
-              <td>${kunde.firma}</td>
-              <td>
-                <button class="edit-btn" onclick="editKunde(${kunde.kunde_id})">✏️</button>
-                <button class="delete-btn" onclick="deleteKunde(${kunde.kunde_id})">🗑️</button>
-              </td>
-            </tr>`;
+                tableBody.innerHTML += `<tr>
+            <td>${kunde.name}</td>
+            <td>${kunde.adresse}</td>
+            <td>${kunde.email}</td>
+            <td>${kunde.telefon}</td>
+            <td>${kunde.firma}</td>
+          </tr>`;
               });
-            });
-  }
-
-  function loadAngebote() {
-    fetch('http://localhost:3000/api/angebote')
-            .then(res => res.json())
-            .then(data => {
-              const tableBody = document.querySelector('#angeboteTable tbody');
-              tableBody.innerHTML = '';
-              data.forEach(angebot => {
-                tableBody.innerHTML += `
-            <tr>
-              <td>${angebot.name}</td>
-              <td>${angebot.beschreibung}</td>
-              <td>${angebot.preis}</td>
-              <td>${angebot.waehrung}</td>
-              <td>
-                <button class="delete-btn" onclick="deleteAngebot(${angebot.angebot_id})">🗑️</button>
-              </td>
-            </tr>`;
-              });
-            });
+            })
+            .catch(error => console.error("Fehler beim Laden der Kunden:", error));
   }
 
   function loadKundenDropdown() {
@@ -196,27 +173,136 @@
               data.forEach(kunde => {
                 dropdown.innerHTML += `<option value="${kunde.kunde_id}">${kunde.name}</option>`;
               });
-            });
+            })
+            .catch(error => console.error("Fehler beim Laden der Kunden:", error));
+  }
+
+  function loadAngebote() {
+    fetch('http://localhost:3000/api/angebote')
+            .then(res => res.json())
+            .then(data => {
+              const tableBody = document.querySelector('#angeboteTable tbody');
+              tableBody.innerHTML = '';
+              data.forEach(angebot => {
+                tableBody.innerHTML += `<tr>
+            <td>${angebot.kunde_id}</td>
+            <td>${angebot.name}</td>
+            <td>${angebot.beschreibung}</td>
+            <td>${angebot.Preis ? parseFloat(angebot.Preis).toFixed(2) : ''}</td>
+            <td>${angebot.waehrung}</td>
+            <td class="actions">
+              <button class="edit-btn" onclick="editAngebot(${angebot.angebot_id})">✏️</button>
+              <button class="delete-btn" onclick="deleteAngebot(${angebot.angebot_id})">🗑️</button>
+            </td>
+          </tr>`;
+              });
+            })
+            .catch(error => console.error("Fehler beim Laden der Angebote:", error));
   }
 
   document.getElementById('angebotForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    fetch('http://localhost:3000/api/angebote', {
-      method: 'POST',
+
+    const angebotId = document.getElementById('angebot_id').value;
+    const kundeId = document.getElementById('angebot_kunde_id').value;
+    const name = document.getElementById('angebot_name').value;
+    const beschreibung = document.getElementById('angebot_beschreibung').value;
+    const preis = parseFloat(document.getElementById('angebot_preis').value);
+    const waehrung = document.getElementById('angebot_waehrung').value;
+
+    if (!kundeId || !name || isNaN(preis) || !waehrung) {
+      alert("Bitte wähle einen Kunden aus und fülle alle Pflichtfelder aus!");
+      return;
+    }
+
+    const data = {
+      kunde_id: kundeId,
+      name: name,
+      beschreibung: beschreibung,
+      Preis: preis, // Ändere "preis" zu "Preis"
+      waehrung: waehrung
+    };
+
+    const url = angebotId ? `http://localhost:3000/api/angebote/${angebotId}` : 'http://localhost:3000/api/angebote';
+    const method = angebotId ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        kunde_id: document.getElementById('angebot_kunde_id').value,
-        name: document.getElementById('angebot_name').value,
-        beschreibung: document.getElementById('angebot_beschreibung').value,
-        preis: document.getElementById('angebot_preis').value,
-        waehrung: document.getElementById('angebot_waehrung').value
-      })
-    }).then(() => {
-      loadAngebote();
-      document.getElementById('angebotForm').reset();
-    });
+      body: JSON.stringify(data)
+    })
+            .then(res => res.json())
+            .then(result => {
+              alert(result.message);
+              document.getElementById('angebotForm').reset();
+              loadAngebote();
+            })
+            .catch(error => alert("Fehler: " + error.message));
   });
 
+  function editAngebot(id) {
+    fetch(`http://localhost:3000/api/angebote/${id}`)
+            .then(res => res.json())
+            .then(angebot => {
+              document.getElementById('angebot_id').value = angebot.angebot_id;
+              document.getElementById('angebot_kunde_id').value = angebot.kunde_id;
+              document.getElementById('angebot_name').value = angebot.name;
+              document.getElementById('angebot_beschreibung').value = angebot.beschreibung;
+              document.getElementById('angebot_preis').value = angebot.Preis; // Ändere "preis" zu "Preis"
+              document.getElementById('angebot_waehrung').value = angebot.waehrung;
+            })
+            .catch(error => alert("Fehler beim Bearbeiten des Angebots: " + error.message));
+  }
+
+  function deleteAngebot(id) {
+    if (confirm("Möchten Sie dieses Angebot wirklich löschen?")) {
+      fetch(`http://localhost:3000/api/angebote/${id}`, {
+        method: 'DELETE'
+      })
+              .then(res => res.json())
+              .then(result => {
+                alert(result.message);
+                loadAngebote();
+              })
+              .catch(error => alert("Fehler beim Löschen des Angebots: " + error.message));
+    }
+  }
+
+  document.getElementById('kundenForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('kunden_name').value;
+    const adresse = document.getElementById('kunden_adresse').value;
+    const email = document.getElementById('kunden_email').value;
+    const telefon = document.getElementById('kunden_telefon').value;
+    const firma = document.getElementById('kunden_firma').value;
+
+    if (!name || !adresse || !email || !telefon) {
+      alert("Bitte fülle alle Pflichtfelder aus!");
+      return;
+    }
+
+    const data = {
+      name: name,
+      adresse: adresse,
+      email: email,
+      telefon: telefon,
+      firma: firma
+    };
+
+    fetch('http://localhost:3000/api/kunden', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+            .then(res => res.json())
+            .then(result => {
+              alert(result.message);
+              document.getElementById('kundenForm').reset();
+              loadKunden();
+            })
+            .catch(error => alert("Fehler: " + error.message));
+  });
 </script>
 
 </body>
